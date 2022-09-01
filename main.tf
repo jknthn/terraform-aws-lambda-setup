@@ -6,6 +6,9 @@ locals {
 }
 
 resource "null_resource" "tests" {
+  triggers = {
+    always_run = timestamp()
+  }
   for_each = toset(local.test_paths)
   provisioner "local-exec" {
     command = "python -m pytest ${each.value}"
@@ -13,6 +16,9 @@ resource "null_resource" "tests" {
 }
 
 resource "null_resource" "pip_install" {
+  triggers = {
+    always_run = timestamp()
+  }
   depends_on = [null_resource.tests]
   provisioner "local-exec" {
     command = "${path.module}/pip_install.sh"
@@ -24,6 +30,9 @@ resource "null_resource" "pip_install" {
 }
 
 data "archive_file" "create_dist_pkg" {
+  triggers = {
+    always_run = timestamp()
+  }
   depends_on = [
     null_resource.pip_install
   ]
