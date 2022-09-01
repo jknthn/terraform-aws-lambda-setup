@@ -5,29 +5,6 @@ locals {
   code_paths = concat([var.function_path], local.shared_paths)
 }
 
-resource "null_resource" "lambda_exporter" {
-  # (some local-exec provisioner blocks, presumably...)
-
-  triggers = {
-    index = jsonencode([for path in local.code_paths : {
-    for fn in fileset(path, "**") :
-    fn => filesha256("${path}/${fn}")
-  }])
-  }
-}
-
-data "null_data_source" "wait_for_lambda_exporter" {
-  inputs = {
-    # This ensures that this data resource will not be evaluated until
-    # after the null_resource has been created.
-    lambda_exporter_id = null_resource.lambda_exporter.id
-
-    # This value gives us something to implicitly depend on
-    # in the archive_file below.
-    source_dir = local.function_path_temp
-  }
-}
-
 resource "null_resource" "tests" {
   for_each = toset(local.test_paths)
   provisioner "local-exec" {
@@ -51,6 +28,6 @@ data "archive_file" "create_dist_pkg" {
     null_resource.pip_install
   ]
   type = "zip"
-  source_dir = data.null_data_source.wait_for_lambda_exporter.outputs.source_dir
+  source_dir = local.function_path_temp
   output_path = "${local.function_path_temp}.zip"
 }
