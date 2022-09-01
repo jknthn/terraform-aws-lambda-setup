@@ -30,9 +30,6 @@ resource "null_resource" "pip_install" {
 }
 
 data "archive_file" "create_dist_pkg" {
-  triggers = {
-    always_run = timestamp()
-  }
   depends_on = [
     null_resource.pip_install
   ]
