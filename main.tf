@@ -29,9 +29,18 @@ resource "null_resource" "pip_install" {
   }
 }
 
+resource "null_resource" "copy_resources" {
+  depends_on = [null_resource.pip_install]
+  for_each = toset(local.shared_paths)
+  provisioner "local-exec" {
+    command = "cp -r ${each.value} ${local.function_path_temp}"
+  }
+}
+
 data "archive_file" "create_dist_pkg" {
   depends_on = [
-    null_resource.pip_install
+    null_resource.pip_install,
+    null_resource.copy_resources
   ]
   type = "zip"
   source_dir = local.function_path_temp
