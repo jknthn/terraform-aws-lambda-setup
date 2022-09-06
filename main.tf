@@ -30,6 +30,9 @@ resource "null_resource" "pip_install" {
 }
 
 resource "null_resource" "copy_resources" {
+  triggers = {
+    always_run = timestamp()
+  }
   depends_on = [null_resource.pip_install]
   for_each = toset(local.shared_paths)
   provisioner "local-exec" {
